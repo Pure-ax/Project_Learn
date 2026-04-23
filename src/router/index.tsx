@@ -6,37 +6,24 @@ import App from '@pc/App'
 // import { WithPermission } from '@pc/components/WithPermission/WithPermission'
 // import Agents from '@pc/pages/Agents'
 import CreateAccount from '@pc/pages/CreateAccount'
-// import Home from '@pc/pages/Home'
+import Home from '@pc/pages/Home'
 import Login from '@pc/pages/Login'
 // import { SharedChat } from '@pc/pages/SharedChat'
 
 // 创建路由
 const routeElements = createRoutesFromElements(
     <Route path={'/'} element={<App />}>
-        {/*<Route*/}
-        {/*    element={*/}
-        {/*    <PageTransition>*/}
-        {/*        <Outlet />*/}
-        {/*    </PageTransition>*/}
-        {/*    }*/}
-        {/*>*/}
-            <Route path={'/login'} element={<Login />} />
-            <Route path={'/create-account'} element={<CreateAccount />} />
-            {/*<Route path={'/shared/:shareId'} element={<SharedChat />} />*/}
+            <Route>
+                <Route path={'/login'} element={<Login/>}/>
+                <Route path={'/create-account'} element={<CreateAccount/>}/>
+            </Route>
+            <Route>
+                <Route path={'/'} element={<Home/>}/>
+                <Route path={'/conversation'} element={<Home/>}/>
+                <Route path={'/conversation/:id'} element={<Home/>}/>
+            </Route>
         </Route>
-        // <Route
-        //     element={
-        //         <WithPermission>
-        //             <LayoutWithSidebar />
-        //         </WithPermission>
-        //     }
-        // >
-        //     <Route path={'/'} element={<Home />} />
-        //     <Route path={'/conversation'} element={<Home />} />
-        //     <Route path={'/conversation/:id'} element={<Home />} />
-        //     <Route path={'/agents'} element={<Agents />} />
-        // </Route>
-    // </Route>
+
 )
 const router = createBrowserRouter(routeElements)
 
