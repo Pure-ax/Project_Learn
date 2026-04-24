@@ -1,6 +1,6 @@
-import { CoffeeOutlined, LinkOutlined, FireOutlined, SmileOutlined, CloseOutlined } from '@ant-design/icons'
+import { CoffeeOutlined, LinkOutlined, FireOutlined, SmileOutlined, CloseOutlined, OpenAIOutlined} from '@ant-design/icons'
 import { Attachments, Prompts, Sender } from '@ant-design/x'
-import { Button, message, Spin, type GetRef } from 'antd'
+import { Button, message, Spin, Space, Typography, type GetRef } from 'antd'
 import React from 'react'
 import { useRef, useState } from 'react'
 import SparkMD5 from 'spark-md5'
@@ -554,12 +554,15 @@ const AIRichInput = () => {
     ];
 
     // 处理提示建议点击
-    const handlePromptClick = (info: { data: any }) => {
+    const handlePromptClick = (info: { data: any }):void => {
         console.log('点击了提示建议:', info.data)
         setInputValue(info.data.description)
         setHasInput(true)
     }
-
+    // 处理语音输入
+    // const handleVoiceInput = (voice: { data: any}):void => {
+    //     console.log('语音输入', voice)
+    // }
 
     return (
         <React.Fragment>
@@ -588,7 +591,45 @@ const AIRichInput = () => {
                     onChange={handleInputChange}
                     header={senderHeader}
                     prefix={<Button type="text" icon={<LinkOutlined />} onClick={() => setOpen(!open)} />}
-                    onPasteFile={(_, files) => {
+                    suffix={(_, info) => {
+                        const { SendButton, LoadingButton, ClearButton, SpeechButton } = info.components;
+                        return (
+                            <Space size="small">
+                                <Typography.Text style={{ whiteSpace: 'nowrap' }} type="secondary">
+                                    <small>`Shift + Enter` to submit</small>
+                                </Typography.Text>
+                                <ClearButton />
+                                <SpeechButton />
+                                {inputLoading ? (
+                                    <LoadingButton
+                                        type="default"
+                                        variant="filled"
+                                        icon={
+                                            <Spin
+                                                style={{
+                                                    display: 'flex',
+                                                }}
+                                                styles={{
+                                                    indicator: {
+                                                        color: '#fff',
+                                                    },
+                                                }}
+                                                size="small"
+                                            />
+                                        }
+                                        disabled
+                                    />
+                                ) : (
+                                    <SendButton
+                                        type="primary"
+                                        icon={<OpenAIOutlined />}
+                                        disabled={false}
+                                    />
+                                )}
+                            </Space>
+                        );
+                    }}
+                    onPasteFile={(files) => {
                         for (const file of files) {
                             // 生成base64临时图片路径
                             attachmentsRef.current?.upload(file)
@@ -599,6 +640,7 @@ const AIRichInput = () => {
                     placeholder="请输入您的问题"
                     loading={inputLoading}
                     onSubmit={(message) => submitMessage(message)}
+                    allowClear
                 />
             </div>
         </React.Fragment>

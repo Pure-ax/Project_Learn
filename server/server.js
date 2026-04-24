@@ -82,11 +82,13 @@ app.post('/users/login', (req, res) => {
 });
 
 const authenticate = (req, res, next) => {
-  const token = req.headers.authorization;
+  const authHeader = req.headers.authorization;
   
-  if (!token) {
+  if (!authHeader) {
     return res.json({ code: 401, msg: '未登录', data: null });
   }
+  
+  const token = authHeader.replace('Bearer ', '');
   
   const user = users.find(u => u.token === token);
   

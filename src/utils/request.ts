@@ -108,7 +108,7 @@ instance.interceptors.request.use(
             // 如果有token则下一步，没有就跳转到login界面
             if(token){
                 // 将token添加至请求头
-                config.headers.Authorization = 'Bearer' + token
+            config.headers.Authorization = 'Bearer ' + token
                 return config
             }else{
                 router.navigate('./login',{replace:true})
