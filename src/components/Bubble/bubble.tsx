@@ -41,7 +41,7 @@ export const ChatBubble = () => {
         }
     }
 
-    const chatMessage = selectedId ? messages.get(selectedId) : []
+    const chatMessage = selectedId ? (messages.get(selectedId) || []) : []
 
     // 渲染消息内容
     const renderMessageContent = (content: MessageContent[]) => {

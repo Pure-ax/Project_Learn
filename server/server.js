@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const path = require('path');
+const axios = require('axios');
 
 const app = express();
 const PORT = 3000;
@@ -33,6 +34,66 @@ const mockAIResponses = [
   '根据你的描述，我建议采取以下步骤：',
   '感谢你的提问，这是一个很有价值的话题。'
 ];
+
+// AI服务配置
+const AI_CONFIG = {
+  // 选择要使用的AI服务: 'openai', 'deepseek', 'qwen', 'mock'
+  provider: 'deepseek',
+  
+  // OpenAI配置
+  openai: {
+    apiKey: 'YOUR_OPENAI_API_KEY',
+    model: 'gpt-3.5-turbo',
+    baseURL: 'https://api.openai.com/v1'
+  },
+  
+  // DeepSeek配置
+  deepseek: {
+    apiKey: 'sk-5c3c890580f44419a175020184aff4ed',
+    model: 'deepseek-chat',
+    baseURL: 'https://api.deepseek.com/v1'
+  },
+  
+  // Qwen配置
+  qwen: {
+    apiKey: 'YOUR_QWEN_API_KEY',
+    model: 'qwen-turbo',
+    baseURL: 'https://api.together.xyz/v1'
+  }
+};
+
+// 调用AI服务
+async function callAIService(prompt) {
+  const config = AI_CONFIG[AI_CONFIG.provider];
+  
+  try {
+    if (AI_CONFIG.provider === 'mock') {
+      // 使用模拟数据
+      return mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)] + '\n\n' + prompt;
+    }
+    
+    const response = await axios.post(
+      `${config.baseURL}/chat/completions`,
+      {
+        model: config.model,
+        messages: [{ role: 'user', content: prompt }],
+        stream: false
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      }
+    );
+    
+    return response.data.choices[0].message.content;
+  } catch (error) {
+    console.error('AI API调用失败:', error.message);
+    // 如果AI服务调用失败，返回模拟数据
+    return mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)] + '\n\n' + prompt;
+  }
+}
 
 app.post('/users/register', (req, res) => {
   const { userName, password, nickName, captcha } = req.body;
@@ -165,7 +226,7 @@ app.get('/chat/messages/:id', authenticate, (req, res) => {
   res.json({ code: 1, msg: null, data: chatMessages });
 });
 
-app.post('/chat/sendMessage', authenticate, (req, res) => {
+app.post('/chat/sendMessage', authenticate, async (req, res) => {
   const { id, message } = req.body;
   
   const userMessage = {
@@ -180,19 +241,20 @@ app.post('/chat/sendMessage', authenticate, (req, res) => {
   
   messages.push(userMessage);
   
+  // 调用真实的AI服务
+  const aiContent = await callAIService(message);
+  
   const aiResponse = {
     id: generateId(),
     role: 'system',
-    content: mockAIResponses[Math.floor(Math.random() * mockAIResponses.length)] + '\n\n' + message,
+    content: aiContent,
     chatId: id,
     createdAt: new Date().toISOString(),
     imgUrl: null,
     fileContent: null
   };
   
-  setTimeout(() => {
-    messages.push(aiResponse);
-  }, 1000);
+  messages.push(aiResponse);
   
   const session = sessions.find(s => s.id === id);
   if (session) {
@@ -215,7 +277,12 @@ app.get('/chat/getChat/:chatId', authenticate, (req, res) => {
     
     if (newMessages.length > 0) {
       newMessages.forEach(msg => {
-        res.write(`data: ${JSON.stringify(msg)}\n\n`);
+        // 发送前端期望的格式
+        if (msg.role === 'system') {
+          // AI回复消息
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: msg.content })}\n\n`);
+          res.write(`data: ${JSON.stringify({ type: 'complete', content: msg.content })}\n\n`);
+        }
       });
       messageId = chatMessages.length;
     }
