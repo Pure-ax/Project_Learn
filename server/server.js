@@ -49,7 +49,7 @@ const AI_CONFIG = {
   
   // DeepSeek配置
   deepseek: {
-    apiKey: 'sk-5c3c890580f44419a175020184aff4ed',
+    apiKey: '',
     model: 'deepseek-chat',
     baseURL: 'https://api.deepseek.com/v1'
   },
